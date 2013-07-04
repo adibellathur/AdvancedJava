@@ -1,44 +1,53 @@
 import java.util.ArrayList;
 
-
 public class ChatRoom {
-
+	// Lists of messages and incoming messages.
 	ArrayList <String> messages;
-	
-	String[][] users = 
-		{
-			{"prat" , "mooreland"}
-			
-		};
-	
-	
-	public ChatRoom () {
+
+	// Users and passwords.
+	String[][] users =
+		{{"prat", "moreland"},
+			{"elisabeth", "foo"},
+			{"deni", "cheesecake"},
+			{"aditya", "7etapu8H"},
+			{"nicholas", "bar"},
+			{"andrew", "cows"},
+			{"zane", "1234"}};
+
+	/**
+	 * Default constructor.
+	 */
+	public ChatRoom() {
 		messages = new ArrayList <String> ();
 	}
-	
-	public int addLine(String line) {
+
+	/**
+	 * Adds a line to the incoming message array.
+	 */
+	public void add(String line) {
 		messages.add(line);
-		
-		return messages.size();		
 	}
-	
-	public String getConversation (int begin) {
-		String conversation = "";
-		for (int i = begin ; i< messages.size() ; i++) {
-			conversation += messages.get(i) + "\n";
+
+	public String get(int index) {
+		if (index >= 0 && index < messages.size()) {
+			return messages.get(index);
 		}
-		
-		return conversation;
+		return "";
 	}
-	
-	public boolean authenticate(String username , String password) {
-		//loop through array
+
+	/**
+	 * Returns true if the username and password is valid.
+	 */
+	public boolean authenticate(String username, String password) {
 		for (int i = 0 ; i < users.length ; i++) {
-			if(users[i][0].equals(username) &&users[i][1].equals(password)) {
+			if (users[i][0].equals(username) && users[i][1].equals(password)) {
 				return true;
 			}
 		}
 		return false;
 	}
-	
+
+	public int messageSize() {
+		return messages.size();
+	}
 }

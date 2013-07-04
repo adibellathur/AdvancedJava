@@ -36,20 +36,19 @@ public class ChatClient {
 	}
 	
 	public void submit(String text) {
-		output.println("message: " + text);
+		output.println("message: Adithya: " + text);
 	}
 	
-	public String getUpdate(int l) {
-		output.println("line: " + l);
+	public String getUpdate() {
 		try {
+			String update = "";
 			String in = input.readLine();
-			while(in == null){
+			while(! in.equals(null)){
+				if(! in.equals(null) && in.startsWith("update:")) {
+					return in.substring(7) + "\n";
+				}
 				in = input.readLine();
 			}
-			
-			String[] parts = in.split(":");
-			return parts[1];
-			
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();

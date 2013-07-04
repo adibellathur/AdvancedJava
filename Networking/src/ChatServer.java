@@ -4,106 +4,89 @@ import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.util.ArrayList;
-import java.util.Date;
 
 /**
- * A TCP server that runs on port 9090.  When a client connects, it
- * sends the client the current date and time, then closes the
- * connection with that client.  Arguably just about the simplest
- * server you can write.
+ * A simple chat server.
  */
 public class ChatServer {
-
-	static int count = 0;
 	static ChatRoom room;
-	
-	String[] [] users = 
-		{
-			{"prat" , "moreland"},
-			{"adithya" , "7etapu8H"},
-			{"nicholas" , "bar"}
-			
-			
-		};
-	
-    /**
-     * Runs the server.
-     */
-    public static void main(String[] args) throws IOException {
-        
-    	ServerSocket listener = new ServerSocket(9090);
-    	ChatRoom room = new ChatRoom();
-    	
-        try {
-            while (true) {
-                Socket socket = listener.accept();         
-                System.out.println("New Connection from" + socket.getInetAddress());                
-                
-                ChatLink link = new ChatLink(socket , room);
-                Thread t = new Thread(link);
-                t.start();
-              
-             }
-        }
-        finally {
-            listener.close();
-        }
-    }
+
+	/**
+	 * Runs the server.
+	 */
+	public static void main(String[] args) throws IOException {
+		ServerSocket listener = new ServerSocket(9090);
+		ChatRoom room = new ChatRoom();
+
+		try {
+			while (true) {
+				Socket socket = listener.accept();
+				System.out.println("New connection from " + socket.getInetAddress());
+
+				ChatLink link = new ChatLink(socket, room);
+				Thread t = new Thread(link);
+				t.start();
+			}
+		}
+		finally {
+			listener.close();
+		}
+	}
 }
 
-////////////////////////////////////////////////////////
-
 class ChatLink implements Runnable {
-	
+
 	BufferedReader input;
 	PrintWriter output;
 	ChatRoom room;
-	
-	public ChatLink (Socket socket , ChatRoom r) {
-        try {
-    		input = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+	int myLine = 0;
+
+	public ChatLink(Socket socket, ChatRoom r) {
+		try {
+			input = new BufferedReader(new InputStreamReader(socket.getInputStream()));
 			output = new PrintWriter(socket.getOutputStream(), true);
 			room = r;
-		} 
-        catch (IOException e) {
+		} catch (IOException e) {
 			e.printStackTrace();
 		}
 	}
-	
+
+	/** My custom protocol, based around action:value pairs
+	 *  login:keshav@password
+	 *  --> login:true/false
+	 *  message:blah
+	 *  --> message:sent/rate limit/not sent
+	 */
+
+	@Override
 	public void run() {
 		while (true) {
 			try {
-				String i = input.readLine();				
-				if(i != null) {
-					String action = i.substring(0 , i.indexOf(':'));
+				String i = input.readLine();
+				if (i != null) {
+					String action = i.substring(0, i.indexOf(':'));
 					String rest = i.substring(i.indexOf(':') + 1);
-					if(action.equals("authenticate")) {
+					if (action.equals("authenticate")) {
 						String[] parts = rest.split("@");
-						boolean auth = room.authenticate(parts[0], parts[1]);
-						output.println("login: ");		
+						output.println("login:" + room.authenticate(parts[0], parts[1]));
 					}
-					if(action.equals("message")) {
-						int line = room.addLine(rest);
-						System.out.println(rest);
-						output.println("line: " + line);
+					if (action.equals("message")) {
+						room.add(rest);
 					}
-					if(action.equals("line")); {
-						int number = Integer.parseInt(rest);
-						output.println("update: " + room.getConversation(number));
+					if (action.equals("line")) {
+						try {
+							myLine = Integer.parseInt(rest.trim());
+						} catch (NumberFormatException e) { }
 					}
-					
-					room.addLine(i);
-					System.out.println(i);
 				}
-				
+				for (int j = myLine ; j < room.messageSize() ; j++) {
+					output.println("update:" + room.get(j));
+				}
+				myLine = room.messageSize();
+
 			} catch (IOException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 		}
-		
 	}
-	
 }
-
